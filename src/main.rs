@@ -1,3 +1,5 @@
+mod commands;
+
 use std::{collections::{HashSet}, env};
 
 use serenity::prelude::*;
@@ -6,7 +8,7 @@ use serenity::{
     framework::standard::{
         Args, CommandResult, CommandGroup,
         HelpOptions, help_commands, StandardFramework,
-        macros::{command, group, help},
+        macros::{group, help},
     },
     http::Http,
     model::{
@@ -15,6 +17,8 @@ use serenity::{
         id::UserId,
     },
 };
+
+use commands::math::*;
 
 struct Handler;
 
@@ -26,9 +30,8 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[prefix = "math"]
 #[commands(add)]
-struct Math;
+struct General;
 
 #[help]
 async fn help(
@@ -68,7 +71,7 @@ async fn main() {
                    .prefix("!")
                    .owners(owners))
         .help(&HELP)
-        .group(&MATH_GROUP);
+        .group(&GENERAL_GROUP);
 
     let mut client = Client::new(&token)
         .event_handler(Handler)
@@ -79,19 +82,4 @@ async fn main() {
     if let Err(e) = client.start().await {
         println!("Client error: {:?}", e);
     }
-}
-
-#[command]
-async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let first = args.single::<f64>()?;
-    let second = args.single::<f64>()?;
-
-    println!("{} {}", first, second);
-
-    let result = first + second;
-    if let Err(e) = msg.channel_id.say(&ctx.http, &result.to_string()).await {
-        println!("Error in command add: {:?}", e);
-    }
-
-    Ok(())
 }
