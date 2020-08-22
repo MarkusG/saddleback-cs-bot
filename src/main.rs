@@ -1,6 +1,7 @@
 mod commands;
 
-use std::{collections::{HashSet}, env};
+use std::collections::HashSet;
+use std::fs;
 
 use serenity::prelude::*;
 use serenity::{
@@ -50,8 +51,8 @@ async fn help(
 async fn main() {
     println!("What is this, like, a Minecraft server-esque power grab or something?");
 
-    let token = env::var("SADDLEBACK_CS_BOT_TOKEN")
-        .expect("SADDLEBACK_CS_BOT_TOKEN not set");
+    let token = fs::read_to_string("token")
+        .expect("Could not read token file");
 
     let http = Http::new_with_token(&token);
     let (owners, bot_id) = match http.get_current_application_info().await {
