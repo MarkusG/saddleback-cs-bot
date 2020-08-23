@@ -32,14 +32,14 @@ pub async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
         match rows {
             Ok(_) => {
                 if let Err(e) = msg.channel_id.say(&ctx.http, "OK").await {
-                    error!("In command add: {:?}", e);
+                    error!("In command name: {:?}", e);
                 }
             },
-            Err(e) => error!("In command add executing query: {:?}", e)
+            Err(e) => error!("In command name executing query: {:?}", e)
         }
     } else {
         if let Err(e) = msg.channel_id.say(&ctx.http, "Database not present").await {
-            error!("In command add: {:?}", e);
+            error!("In command name: {:?}", e);
         }
     }
 
