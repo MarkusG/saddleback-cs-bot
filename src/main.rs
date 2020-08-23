@@ -99,13 +99,6 @@ async fn main() {
         }
     };
 
-    // let (db_client, db_conn) = tokio_postgres::connect("host=localhost user=saddlebot dbname=saddlebot", NoTls).await.unwrap();
-    // tokio::spawn(async move {
-    //     if let Err(e) = db_conn.await {
-    //         println!("Error connecting to database: {:?}", e);
-    //     }
-    // });
-
     {
         let mut data = client.data.write().await;
         data.insert::<DbConnection>(Arc::new(db_client_mutex));
