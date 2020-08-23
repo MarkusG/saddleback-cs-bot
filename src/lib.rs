@@ -3,5 +3,5 @@ use serenity::prelude::*;
 pub struct DbConnection;
 
 impl TypeMapKey for DbConnection {
-    type Value = Arc<Mutex<Option<tokio_postgres::Client>>>;
+    type Value = Arc<Mutex<tokio_postgres::Client>>;
 }

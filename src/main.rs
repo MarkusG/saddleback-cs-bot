@@ -83,7 +83,7 @@ async fn main() {
         .await
         .expect("Error creating client");
 
-    let db_client_mutex = match tokio_postgres::connect("host=localhost user=saddlebot dbname=saddlebot", NoTls).await {
+    match tokio_postgres::connect("host=localhost user=saddlebot dbname=saddlebot", NoTls).await {
         Ok((cl, co)) => {
             tokio::spawn(async move {
                 if let Err(e) = co.await {
@@ -91,18 +91,16 @@ async fn main() {
                 }
             });
 
-            Mutex::new(Some(cl))
+            {
+                let mut data = client.data.write().await;
+                data.insert::<DbConnection>(Arc::new(Mutex::new(cl)));
+            }
         },
         Err(e) => {
             println!("Error connecting to database: {:?}", e);
-            Mutex::new(None)
         }
     };
 
-    {
-        let mut data = client.data.write().await;
-        data.insert::<DbConnection>(Arc::new(db_client_mutex));
-    }
 
     if let Err(e) = client.start().await {
         println!("Client error: {:?}", e);
