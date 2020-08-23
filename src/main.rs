@@ -14,7 +14,7 @@ use serenity::{
     framework::standard::{
         Args, CommandResult, CommandGroup,
         HelpOptions, help_commands, StandardFramework,
-        macros::{group, help},
+        macros::{group, help, hook},
     },
     http::Http,
     model::{
@@ -53,6 +53,21 @@ async fn help(
     Ok(())
 }
 
+#[hook]
+async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
+    let name = format!("{}#{}", msg.author.name, msg.author.discriminator);
+    info!("Executing `{}` for {} in {}", command_name, name, msg.channel_id.name(&ctx.cache).await.unwrap());
+
+    true
+}
+
+#[hook]
+async fn after(_ctx: &Context, _msg: &Message, command_name: &str, command_result: CommandResult) {
+    if let Err(e) = command_result {
+        error!("Command {} returned error: {:?}", command_name, e);
+    }
+}
+
 #[tokio::main]
 async fn main() {
     TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap();
@@ -78,6 +93,8 @@ async fn main() {
                    .on_mention(Some(bot_id))
                    .prefix("!")
                    .owners(owners))
+        .before(before)
+        .after(after)
         .help(&HELP)
         .group(&GENERAL_GROUP);
 
