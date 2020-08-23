@@ -1,7 +1,9 @@
 mod commands;
 
 use std::collections::HashSet;
-use std::fs;
+use std::{fs, sync::Arc};
+
+use tokio_postgres::NoTls;
 
 use serenity::prelude::*;
 use serenity::{
@@ -19,7 +21,8 @@ use serenity::{
     },
 };
 
-use commands::math::*;
+use commands::directory::*;
+use saddleback_cs_bot::DbConnection;
 
 struct Handler;
 
@@ -31,7 +34,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(add)]
+#[commands(name, course)]
 struct General;
 
 #[help]
@@ -79,6 +82,34 @@ async fn main() {
         .framework(framework)
         .await
         .expect("Error creating client");
+
+    let db_client_mutex = match tokio_postgres::connect("host=localhost user=saddlebot dbname=saddlebot", NoTls).await {
+        Ok((cl, co)) => {
+            tokio::spawn(async move {
+                if let Err(e) = co.await {
+                    println!("Error connecting to database: {:?}", e);
+                }
+            });
+
+            Mutex::new(Some(cl))
+        },
+        Err(e) => {
+            println!("Error connecting to database: {:?}", e);
+            Mutex::new(None)
+        }
+    };
+
+    // let (db_client, db_conn) = tokio_postgres::connect("host=localhost user=saddlebot dbname=saddlebot", NoTls).await.unwrap();
+    // tokio::spawn(async move {
+    //     if let Err(e) = db_conn.await {
+    //         println!("Error connecting to database: {:?}", e);
+    //     }
+    // });
+
+    {
+        let mut data = client.data.write().await;
+        data.insert::<DbConnection>(Arc::new(db_client_mutex));
+    }
 
     if let Err(e) = client.start().await {
         println!("Client error: {:?}", e);
