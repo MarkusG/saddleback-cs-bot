@@ -81,7 +81,7 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
                     }
                 }
 
-                if courses.len() != 0 {
+                if courses.len() != 1 {
                     courses.push(course.to_string());
                 }
             },
