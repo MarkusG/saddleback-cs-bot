@@ -3,6 +3,9 @@ mod commands;
 use std::collections::HashSet;
 use std::{fs, sync::Arc};
 
+use log::*;
+use simplelog::*;
+
 use tokio_postgres::NoTls;
 
 use serenity::prelude::*;
@@ -29,7 +32,7 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, _: Context, ready: Ready) {
-        println!("Connected as {}", ready.user.name);
+        info!("Connected as {}", ready.user.name);
     }
 }
 
@@ -52,7 +55,8 @@ async fn help(
 
 #[tokio::main]
 async fn main() {
-    println!("What is this, like, a Minecraft server-esque power grab or something?");
+    TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap();
+    info!("What is this, like, a Minecraft server-esque power grab or something?");
 
     let token = fs::read_to_string("token")
         .expect("Could not read token file");
@@ -87,7 +91,7 @@ async fn main() {
         Ok((cl, co)) => {
             tokio::spawn(async move {
                 if let Err(e) = co.await {
-                    println!("Error connecting to database: {:?}", e);
+                    warn!("Error connecting to database: {:?}", e);
                 }
             });
 
@@ -97,12 +101,12 @@ async fn main() {
             }
         },
         Err(e) => {
-            println!("Error connecting to database: {:?}", e);
+            warn!("Error connecting to database: {:?}", e);
         }
     };
 
 
     if let Err(e) = client.start().await {
-        println!("Client error: {:?}", e);
+        error!("Client error: {:?}", e);
     }
 }

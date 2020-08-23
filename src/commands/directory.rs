@@ -1,3 +1,5 @@
+use log::*;
+
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use serenity::framework::standard::{
@@ -30,14 +32,14 @@ pub async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
         match rows {
             Ok(_) => {
                 if let Err(e) = msg.channel_id.say(&ctx.http, "OK").await {
-                    println!("Error in command add: {:?}", e);
+                    error!("In command add: {:?}", e);
                 }
             },
-            Err(e) => println!("Error executing query: {:?}", e)
+            Err(e) => error!("In command add executing query: {:?}", e)
         }
     } else {
         if let Err(e) = msg.channel_id.say(&ctx.http, "Database not present").await {
-            println!("Error in command add: {:?}", e);
+            error!("In command add: {:?}", e);
         }
     }
 
