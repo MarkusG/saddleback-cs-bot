@@ -47,12 +47,75 @@ pub async fn name(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 }
 
 #[command]
-pub async fn course(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let first = args.single::<f64>()?;
-
-    if let Err(e) = msg.channel_id.say(&ctx.http, &first).await {
-        println!("Error in command add: {:?}", e);
+pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let course = args.single::<String>()?.to_uppercase();
+    match course.as_str() {
+        "1A" | "1B" | "1C" | "1D" | "3A" | "3B" | "4A" | "CIMS140" | "CIMS150" => (),
+        _ => {
+            if let Err(e) = msg.channel_id.say(&ctx.http, "Invalid course").await {
+                error!("In command course: {:?}", e);
+            }
+        }
     }
+
+    if let Some(m) = ctx.data.read().await.get::<DbConnection>().cloned() {
+        let db_client = m.lock().await;
+
+        let c = &*db_client;
+        let query = r#"
+        SELECT courses FROM member
+        WHERE id = $1"#;
+        let rows = c
+            .query(query, &[&(*msg.author.id.as_u64() as i64)])
+            .await;
+        let mut courses = vec![course.to_string()];
+        match rows {
+            Ok(r) => {
+                for row in r {
+                    courses = row.get(0);
+                    if courses.contains(&course) {
+                        if let Err(e) = msg.channel_id.say(&ctx.http, "Already in course").await {
+                            error!("In command course add: {:?}", e);
+                        }
+                        return Ok(());
+                    }
+                }
+
+                if courses.len() != 0 {
+                    courses.push(course.to_string());
+                }
+            },
+            Err(e) => {
+                error!("In command course add executing query: {:?}", e);
+                return Ok(())
+            }
+        }
+        let query = r#"
+        INSERT INTO member (id, courses)
+        VALUES ($1, $2)
+        ON CONFLICT (id) DO UPDATE
+        SET courses = excluded.courses"#;
+        let rows = c
+            .query(query, &[&(*msg.author.id.as_u64() as i64), &courses])
+            .await;
+        match rows {
+            Ok(_) => {
+                if let Err(e) = msg.channel_id.say(&ctx.http, "OK").await {
+                    error!("In command name: {:?}", e);
+                }
+            },
+            Err(e) => error!("In command name executing query: {:?}", e)
+        }
+    } else {
+        if let Err(e) = msg.channel_id.say(&ctx.http, "Database not present").await {
+            error!("In command course add: {:?}", e);
+        }
+    }
+    Ok(())
+}
+
+#[command]
+pub async fn remove(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     Ok(())
 }

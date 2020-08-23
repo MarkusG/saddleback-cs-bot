@@ -37,8 +37,13 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(name, course)]
+#[commands(name)]
 struct General;
+
+#[group]
+#[prefix = "course"]
+#[commands(add, remove)]
+struct Course;
 
 #[help]
 async fn help(
@@ -96,7 +101,8 @@ async fn main() {
         .before(before)
         .after(after)
         .help(&HELP)
-        .group(&GENERAL_GROUP);
+        .group(&GENERAL_GROUP)
+        .group(&COURSE_GROUP);
 
     let mut client = Client::new(&token)
         .event_handler(Handler)
