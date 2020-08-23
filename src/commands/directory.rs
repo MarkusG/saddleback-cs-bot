@@ -68,7 +68,7 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
         let rows = c
             .query(query, &[&(*msg.author.id.as_u64() as i64)])
             .await;
-        let mut courses = vec![course.to_string()];
+        let mut courses = Vec::new();
         match rows {
             Ok(r) => {
                 for row in r {
@@ -81,8 +81,12 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
                     }
                 }
 
-                if courses.len() != 1 {
+                if !courses.contains(&course) {
                     courses.push(course.to_string());
+                } else {
+                    if let Err(e) = msg.channel_id.say(&ctx.http, "Already in course").await {
+                        error!("In command course add: {:?}", e);
+                    }
                 }
             },
             Err(e) => {
