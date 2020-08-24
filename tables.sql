@@ -8,5 +8,5 @@ CREATE TABLE member (
 	is_professor BOOLEAN NOT NULL DEFAULT false,
 	first_name   TEXT,
 	last_name    TEXT,
-	courses      TEXT[]
+	courses      TEXT[] DEFAULT ARRAY[]::TEXT[]
 );
