@@ -55,6 +55,7 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
             if let Err(e) = msg.channel_id.say(&ctx.http, "Invalid course").await {
                 error!("In command course: {:?}", e);
             }
+            return Ok(());
         }
     }
 
@@ -72,12 +73,14 @@ pub async fn add(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
         match rows {
             Ok(r) => {
                 for row in r {
-                    courses = row.get(0);
-                    if courses.contains(&course) {
-                        if let Err(e) = msg.channel_id.say(&ctx.http, "Already in course").await {
-                            error!("In command course add: {:?}", e);
+                    if let Ok(c) = row.try_get(0) {
+                        courses = c;
+                        if courses.contains(&course) {
+                            if let Err(e) = msg.channel_id.say(&ctx.http, "Already in course").await {
+                                error!("In command course add: {:?}", e);
+                            }
+                            return Ok(());
                         }
-                        return Ok(());
                     }
                 }
 
